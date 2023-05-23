@@ -6,17 +6,17 @@ from dotenv import load_dotenv
 from pprint import pprint
 from chat import GPT
 from datetime import datetime
-import workYDB2
+import workYDB
 from createKeyboard import create_menu_keyboard
 
 load_dotenv()
 
 gpt = GPT()
-GPT.set_key(os.getenv('KEY_AI2'))
+GPT.set_key(os.getenv('KEY_AI'))
 bot = telebot.TeleBot(os.getenv('TELEBOT_TOKEN2'))
 # инициализация бота и диспетчера
 #dp = Dispatcher(bot)
-sql = workYDB2.Ydb()
+sql = workYDB.Ydb()
 
 # model_index=gpt.load_search_indexes('https://docs.google.com/document/d/1nMjBCoI3WpWofpVRI0rsi-iHjVSeC358JDwN96UW/edit?usp=sharing')
 #model_index=sql.select_query('model', 'model=main')
@@ -58,7 +58,7 @@ def say_welcome(message):
     row = {'id': message.chat.id, 'model': '', 'promt': ''}
     sql.replace_query('user', row)
 
-    bot.send_message(message.chat.id, """Привет. Я Chat GPT-4, ИИ-аналитик по BTC""", reply_keyboard=create_menu_keyboard())
+    bot.send_message(message.chat.id, """Привет. Я Chat GPT-4, ИИ-аналитик по BTC""", reply_markup=create_menu_keyboard())
 #expert_promt = gpt.load_prompt('https://docs.google.com/document/d/181Q-jJpSpV0PGnGnx45zQTHlHSQxXvkpuqlKmVlHDvU/')
 
 
@@ -151,7 +151,8 @@ def any_message(message):
     
     if text == 'Аналитика BTC на 30 дней':
         promptUrl = sql.select_query('promt', 'promt="promt3"')[0]['url'].decode('utf-8')
-    
+     
+    bot.send_message(message.chat.id,'Состовляю аналитику')
     promt = gpt.load_prompt(promptUrl)
     print(f'{promptUrl=}')
     try:
