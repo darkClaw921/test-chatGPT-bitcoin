@@ -152,7 +152,7 @@ def any_message(message):
     if text == 'Аналитика BTC на 30 дней':
         promptUrl = sql.select_query('promt', 'promt="promt3"')[0]['url'].decode('utf-8')
      
-    bot.send_message(message.chat.id,'Состовляю аналитику')
+    bot.send_message(message.chat.id,'Состaвляю аналитику')
     promt = gpt.load_prompt(promptUrl)
     print(f'{promptUrl=}')
     try:
