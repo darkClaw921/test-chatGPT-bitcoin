@@ -8,3 +8,4 @@ ipywidgets
 telebot
 ydb
 ydb[yc]
+redis

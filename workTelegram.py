@@ -171,7 +171,11 @@ def any_message(message):
         add_message_to_history(userID, 'user', text)
         history = get_history(str(userID))
         print('history', history)
-        a = gpt.answer(' ', history)
+        try:
+            a = gpt.answer(' ', history)
+        except Exception as e:
+            bot.send_message(message.chat.id, f'{e}')
+            return 0
         bot.send_message(message.chat.id, a)
         add_message_to_history(userID, 'assistant', a)
         return 0
