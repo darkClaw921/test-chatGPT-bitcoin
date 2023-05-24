@@ -8,15 +8,17 @@ from chat import GPT
 from datetime import datetime
 import workYDB
 from createKeyboard import create_menu_keyboard
-
+import redis
+import json
 load_dotenv()
 
 gpt = GPT()
 GPT.set_key(os.getenv('KEY_AI'))
-bot = telebot.TeleBot(os.getenv('TELEBOT_TOKEN2'))
+bot = telebot.TeleBot(os.getenv('TELEBOT_TOKEN'))
 # инициализация бота и диспетчера
 #dp = Dispatcher(bot)
 sql = workYDB.Ydb()
+r = redis.Redis(host='localhost', port=6379, decode_responses=False)
 
 # model_index=gpt.load_search_indexes('https://docs.google.com/document/d/1nMjBCoI3WpWofpVRI0rsi-iHjVSeC358JDwN96UW/edit?usp=sharing')
 #model_index=sql.select_query('model', 'model=main')
@@ -36,6 +38,17 @@ def get_model_url(modelName: str):
     print('a', modelUrl)
     return modelUrl.decode('utf-8')
 
+def add_message_to_history(userID:str, role:str, message:str):
+    mess = {'role': role, 'content': message}
+    r.lpush(userID, json.dumps(mess))
+
+def get_history(userID:str):
+    items = r.lrange(userID, 0, -1)
+    history = [json.loads(m.decode("utf-8")) for m in items[::-1]]
+    return history
+
+def clear_history(userID:str):
+    r.delete(userID)
 
 @bot.message_handler(commands=['addmodel'])
 def add_new_model(message):
@@ -71,9 +84,10 @@ def restart_modal_index(message):
 
 @bot.message_handler(commands=['context'])
 def send_button(message):
-    promt = sql.select_query('user', f"id={message.chat.id}")[
-        0]['promt'].decode('utf-8')
-    payload = sql.get_payload(message.chat.id)
+    try:
+        payload = sql.get_payload(message.chat.id)
+    except:
+        payload = ' '
     #context = sql.get_context(message.chat.id, payload)
     #model = get_model_url(payload)
     #answer = gpt.answer(validation_promt, context, temp = 0.1)
@@ -85,8 +99,10 @@ def send_button(message):
                          "у вас небыло активного диалога контекст сброшен",)
 
     #bot.send_message(message.chat.id, answer)
+    clear_history(message.chat.id)
     bot.send_message(message.chat.id,
                      "Контекст сброшен",)
+    
 
 
 @bot.message_handler(commands=['model1'])
@@ -146,22 +162,33 @@ def any_message(message):
     
     if text == 'Аналитика BTC на 5 дней':
         promptUrl = sql.select_query('promt', 'promt="promt1"')[0]['url'].decode('utf-8')
-    if text == 'Аналитика BTC на 15 дней':
+    elif text == 'Аналитика BTC на 15 дней':
         promptUrl = sql.select_query('promt', 'promt="promt2"')[0]['url'].decode('utf-8')
     
-    if text == 'Аналитика BTC на 30 дней':
+    elif text == 'Аналитика BTC на 30 дней':
         promptUrl = sql.select_query('promt', 'promt="promt3"')[0]['url'].decode('utf-8')
-     
+    else:
+        add_message_to_history(userID, 'user', text)
+        history = get_history(str(userID))
+        print('history', history)
+        a = gpt.answer(' ', history)
+        bot.send_message(message.chat.id, a)
+        add_message_to_history(userID, 'assistant', a)
+        return 0
+
     bot.send_message(message.chat.id,'Состaвляю аналитику')
     promt = gpt.load_prompt(promptUrl)
     print(f'{promptUrl=}')
     try:
-        answer = gpt.answer(promt, ' ', temp=1)
+        mess = [{'role': 'system', 'content': promt,},
+                {'role': 'user', 'content': ' '}]
+        answer = gpt.answer(' ',mess,)
     except Exception as e:
         bot.send_message(message.chat.id, f'{e}')
         return 0
     
     bot.send_message(message.chat.id, answer)
+    #add_message_to_history(userID, 'assistant', answer)
     return 0
     #context = sql.get_context(userID, payload)
     # if context is None or context == '' or context == []:
