@@ -32,7 +32,9 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
 class GPT():
-  def __init__(self):
+  modelVersion = ''
+  def __init__(self,modelVersion:str = 'gpt-3.5-turbo-16k'):
+    self.modelVersion = modelVersion
     pass
 
   @classmethod
@@ -108,12 +110,13 @@ class GPT():
     """
     completion = openai.ChatCompletion.create(
       #model="gpt-3.5-turbo",
-      model="gpt-4",
+      model=self.modelVersion,
       messages=messages,
       temperature=temp
       )
-
-    return completion.choices[0].message.content
+    allToken = f'{completion["usage"]["total_tokens"]} токенов использовано всего (вопрос-ответ).'
+    allTokenPrice = f'ЦЕНА запроса с ответом :{0.002*(completion["usage"]["total_tokens"]/1000)} $'
+    return f'{completion.choices[0].message.content}\n\n{allToken}\n{allTokenPrice}'
 
   def num_tokens_from_messages(self, messages, model="gpt-3.5-turbo-0301"):
     """Returns the number of tokens used by a list of messages."""
@@ -170,7 +173,8 @@ See https://github.com/openai/openai-python/blob/main/chatml.md for information 
     if (verbose): print(f"{self.num_tokens_from_messages(messages, 'gpt-3.5-turbo-0301')} токенов использовано на вопрос")
 
     completion = openai.ChatCompletion.create(
-    model="gpt-3.5-turbo",
+    #model="gpt-3.5-turbo",
+    model=self.modelVersion,
     messages=messages,
     temperature=temp
     )
@@ -192,7 +196,7 @@ See https://github.com/openai/openai-python/blob/main/chatml.md for information 
       ]
 
     completion = openai.ChatCompletion.create(
-      model="gpt-3.5-turbo",
+      model=self.modelVersion,
       messages=messages,
       temperature=temp
       )
