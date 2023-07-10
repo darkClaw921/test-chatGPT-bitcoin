@@ -58,15 +58,15 @@ def get_BTC_analit_for(dayStart:str )-> str:
     Returns:
         str: _description_
     """
-    setting={'на 5 дней':[Client.KLINE_INTERVAL_1WEEK, '1 year ago UTC'],
-            'на 15 дней':[Client.KLINE_INTERVAL_1WEEK, '2 year ago UTC'],
-            'на 30 дней':[Client.KLINE_INTERVAL_1WEEK, '2 year ago UTC'],}
+    setting={'Аналитика BTC на 5 дней':[Client.KLINE_INTERVAL_1DAY, '3 month ago UTC'],
+            'Аналитика BTC на 15 дней':[Client.KLINE_INTERVAL_1DAY , '3 month ago UTC'],
+            'Аналитика BTC на 30 дней':[Client.KLINE_INTERVAL_1WEEK, '2 year ago UTC'],}
 
     setting =setting[dayStart]
     #klines = client.get_historical_klines("BNBBTC", Client.KLINE_INTERVAL_1WEEK, start_day)
     klines = client.get_historical_klines("BTCUSDT", setting[0], setting[1])
-    pprint(klines)
-    print(len(klines))
+    #pprint(klines)
+    #print(len(klines))
     history = prepare_list(klines)
     return history
 

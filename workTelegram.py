@@ -2,6 +2,7 @@ import os
 import random
 import telebot
 from datetime import datetime
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from pprint import pprint
 from chat import GPT
@@ -10,6 +11,8 @@ import workYDB
 from createKeyboard import create_menu_keyboard
 import redis
 import json
+from workBinance import get_BTC_analit_for
+from helper import *
 load_dotenv()
 
 gpt = GPT()
@@ -20,35 +23,9 @@ bot = telebot.TeleBot(os.getenv('TELEBOT_TOKEN'))
 sql = workYDB.Ydb()
 r = redis.Redis(host='localhost', port=6379, decode_responses=False)
 
-# model_index=gpt.load_search_indexes('https://docs.google.com/document/d/1nMjBCoI3WpWofpVRI0rsi-iHjVSeC358JDwN96UW/edit?usp=sharing')
+PROMT_URL = 'https://docs.google.com/document/d/1YLkjaQPlAQASmuHDdHP43uBtxNOdt3eLZqHUH6YAff8/edit?usp=sharing'
+#model_index=gpt.load_search_indexes('')
 #model_index=sql.select_query('model', 'model=main')
-
-
-def time_epoch():
-    from time import mktime
-    dt = datetime.now()
-    sec_since_epoch = mktime(dt.timetuple()) + dt.microsecond/1000000.0
-
-    millis_since_epoch = sec_since_epoch * 1000
-    return int(millis_since_epoch)
-
-
-def get_model_url(modelName: str):
-    modelUrl = sql.select_query('model', f'model = "{modelName}"')[0]['url']
-    print('a', modelUrl)
-    return modelUrl.decode('utf-8')
-
-def add_message_to_history(userID:str, role:str, message:str):
-    mess = {'role': role, 'content': message}
-    r.lpush(userID, json.dumps(mess))
-
-def get_history(userID:str):
-    items = r.lrange(userID, 0, -1)
-    history = [json.loads(m.decode("utf-8")) for m in items[::-1]]
-    return history
-
-def clear_history(userID:str):
-    r.delete(userID)
 
 @bot.message_handler(commands=['addmodel'])
 def add_new_model(message):
@@ -63,12 +40,13 @@ def add_new_promt(message):
     bot.send_message(message.chat.id,
                      "Пришлите ссылку на google document и через пробел название промта (promt1). Не используйте уже существующие названия промта\n Внимани! конец ссылки должен вылядить так /edit?usp=sharing",)
 
-
 @bot.message_handler(commands=['help', 'start'])
 def say_welcome(message):
+    username = message.from_user.username
+
     row = {'id': 'Uint64', 'MODEL_DIALOG': 'String', 'TEXT': 'String'}
     sql.create_table(str(message.chat.id), row)
-    row = {'id': message.chat.id, 'model': '', 'promt': ''}
+    row = {'id': message.chat.id, 'model': '', 'promt': '','nicname':username}
     sql.replace_query('user', row)
 
     bot.send_message(message.chat.id, """Привет. Я Chat GPT-4, ИИ-аналитик по BTC""", reply_markup=create_menu_keyboard())
@@ -78,8 +56,7 @@ def say_welcome(message):
 @bot.message_handler(commands=['restart'])
 def restart_modal_index(message):
     global model_index
-    model_index = gpt.load_search_indexes(
-        'https://docs.google.com/document/d/1nMjBCoI3WpWofpVRI0rsi-iHjVSeC358JDwN96U/edit?usp=sharing')
+    model_index = gpt.load_search_indexes(model_index)
 
 
 @bot.message_handler(commands=['context'])
@@ -154,43 +131,36 @@ def any_message(message):
     except:
         payload = 'a'
 
-    if payload == 'addpromt':
-        text = text.split(' ')
-        rows = {'promt': text[1], 'url': text[0]}
-        # sql.insert_query('model',rows)
-        sql.replace_query('promt', rows)
     
-    if text == 'Аналитика BTC на 5 дней':
-        promptUrl = sql.select_query('promt', 'promt="promt1"')[0]['url'].decode('utf-8')
-    elif text == 'Аналитика BTC на 15 дней':
-        promptUrl = sql.select_query('promt', 'promt="promt2"')[0]['url'].decode('utf-8')
     
-    elif text == 'Аналитика BTC на 30 дней':
-        promptUrl = sql.select_query('promt', 'promt="promt3"')[0]['url'].decode('utf-8')
-    else:
-        add_message_to_history(userID, 'user', text)
-        history = get_history(str(userID))
-        print('history', history)
-        try:
-            a = gpt.answer(' ', history)
-        except Exception as e:
-            bot.send_message(message.chat.id, f'{e}')
-            return 0
-        bot.send_message(message.chat.id, a)
-        add_message_to_history(userID, 'assistant', a)
-        return 0
-
     bot.send_message(message.chat.id,'Состaвляю аналитику')
-    promt = gpt.load_prompt(promptUrl)
-    print(f'{promptUrl=}')
+    #promt = gpt.load_prompt(promptUrl)
+    promt = gpt.load_prompt(PROMT_URL)
+    #promt = 
+    #print(f'{promptUrl=}')
+    analitBTC = get_BTC_analit_for(text)
+    #print(f'{analitBTC}')
+    current, future = get_dates(int(text.split(' ')[3]))
+    print("Текущая дата:", current)
+    print(f"Дата через {text} дней:", future)
+    promt = promt.replace('[analitict]', analitBTC)
+    promt = promt.replace('[nextDate]', text.split(' ')[3])
+    promt = promt.replace('[nowDate]', future)
+    print(f'{PROMT_URL}')
+    #print('#########################################', promt)
     try:
         mess = [{'role': 'system', 'content': promt,},
                 {'role': 'user', 'content': ' '}]
-        answer = gpt.answer(' ',mess,)
+        answer, allToken, allTokenPrice= gpt.answer(' ',mess,)
+        
+        row = {'all_price': float(allTokenPrice), 'all_token': int(allToken), 'all_messages': 1}
+        sql.plus_query_user('user', row, f"id={userID}")
+    
     except Exception as e:
         bot.send_message(message.chat.id, f'{e}')
         return 0
     
+
     bot.send_message(message.chat.id, answer)
     #add_message_to_history(userID, 'assistant', answer)
     return 0

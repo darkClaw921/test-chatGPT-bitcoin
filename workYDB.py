@@ -2,6 +2,7 @@ import os
 import ydb
 import ydb.iam
 from dotenv import load_dotenv
+from helper import *
 load_dotenv()
 
 driver = ydb.Driver(
@@ -65,9 +66,15 @@ class Ydb:
         my_list = list(rows.values())
         sets = ''
         for key, value in rows.items():
-            if key == 'ID':
+            if key in ['ID']:
                 continue
-            sets += f'{key} = "{value}",'
+            if key == 'all_price':
+                sets += f'{key} = {float(value)},'
+            elif key in ['all_token', 'all_messages']:
+                sets += f'{key} = {int(value)},'
+            else:
+                sets += f'{key} = "{value}",'
+
             """
             try:
                 sets += f'{key} = {int(value)},'
@@ -81,7 +88,7 @@ class Ydb:
         # values_placeholder_format = ', '.join(my_list)
         query = f'UPDATE {tableName} SET {sets} WHERE {where}'
         # query = f"INSERT INTO {tableName} ({fields_format}) " \
-        #print(query)
+        print(query)
 
         def a(session):
             session.transaction(ydb.SerializableReadWrite()).execute(
@@ -89,6 +96,25 @@ class Ydb:
                 commit_tx=True,
             )
         return pool.retry_operation_sync(a)
+
+    def plus_query_user(self, tableName: str, rows: dict, where: str):
+        # 'where id > 20 '
+        """складывает предыдущие значения row с новыми"""
+        get = self.select_query(tableName, where)[0]
+        row = 0
+        try:
+            get = {'all_price': float(get['all_price']), 'all_token': int(get['all_token']), 'all_messages':int(get['all_messages'])}
+        except Exception as e:
+            print('e', e)
+            get = {'all_price': 0, 'all_token': 0, 'all_messages': 0}
+        try:
+            row = sum_dict_values(get, rows)
+        except Exception as e:
+            print('ошибка',e)
+            row = rows
+        print(f'{get=}') 
+        print(f'{row=}') 
+        self.update_query(tableName, row, where)
 
     def delete_query(self, tableName: str, where: str):
         # 'where id > 20 '
