@@ -130,9 +130,16 @@ def any_message(message):
         payload = sql.get_payload(userID)
     except:
         payload = 'a'
-
     
+    if payload == 'addpromt':
+        text = text.split(' ')
+        rows = {'promt': text[1], 'url': text[0] }
+        #sql.insert_query('model',rows)
+        sql.replace_query('promt',rows)
+        return 0
     
+    promt = sql.select_query('promt', f'promt=promt1')[0]['promt']
+    PROMT_URL = promt 
     bot.send_message(message.chat.id,'Состaвляю аналитику')
     #promt = gpt.load_prompt(promptUrl)
     promt = gpt.load_prompt(PROMT_URL)
