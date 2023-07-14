@@ -225,7 +225,7 @@ class Ydb:
     def select_query(self,tableName: str, where: str):
         # 'where id > 20 '
         query = f'SELECT * FROM {tableName} WHERE {where}'
-        #print(query)
+        print(query)
 
         def a(session):
             return session.transaction().execute(

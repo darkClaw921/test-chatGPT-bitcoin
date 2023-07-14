@@ -139,8 +139,11 @@ def any_message(message):
         sql.set_payload(message.chat.id, '')
         return 0
     
-    promt = sql.select_query('promt', f'promt=promt1')[0]['promt']
-    PROMT_URL = promt 
+    #promt = sql.select_query('promt', f'promt="promt1"')[0]['promt']
+    promtUrl = sql.select_query('promt', f'promt="promt1"')[
+        0]['url'].decode('utf-8')
+    PROMT_URL = promtUrl 
+
     bot.send_message(message.chat.id,'Состaвляю аналитику')
     #promt = gpt.load_prompt(promptUrl)
     promt = gpt.load_prompt(PROMT_URL)
