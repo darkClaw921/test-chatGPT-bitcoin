@@ -136,6 +136,7 @@ def any_message(message):
         rows = {'promt': text[1], 'url': text[0] }
         #sql.insert_query('model',rows)
         sql.replace_query('promt',rows)
+        sql.set_payload(message.chat.id, '')
         return 0
     
     promt = sql.select_query('promt', f'promt=promt1')[0]['promt']
