@@ -9,3 +9,4 @@ telebot
 ydb
 ydb[yc]
 redis
+python-binance
