@@ -188,7 +188,7 @@ def any_message(message):
             'time_epoh':time_epoch(),
             'date':dateNow,
             'text_prognoz': answer,
-            'coin':text,
+            'coin':text.title(),
         }
         
     sql.insert_query('prognoz_text', row)
