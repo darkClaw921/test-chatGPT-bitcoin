@@ -5,7 +5,7 @@ __pycache__/
 
 # C extensions
 *.so
-
+*.json
 # Distribution / packaging
 bin/
 kgtaprojects-8706cc47a185.json

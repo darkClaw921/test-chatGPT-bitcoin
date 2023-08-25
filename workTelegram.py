@@ -23,7 +23,7 @@ bot = telebot.TeleBot(os.getenv('TELEBOT_TOKEN'))
 sql = workYDB.Ydb()
 r = redis.Redis(host='localhost', port=6379, decode_responses=False)
 
-PROMT_URL = 'https://docs.google.com/document/d/1YLkjaQPlAQASmuHDdHP43uBtxNOdt3eLZqHUH6YAff8/edit?usp=sharing'
+PROMT_URL = 'https://docs.google.com/document/d/1_Ft4sDJJpGdBX8k2Et-OBIUtvO0TSuw8ZSjbv5r7H7I/edit?usp=sharing'
 #model_index=gpt.load_search_indexes('')
 #model_index=sql.select_query('model', 'model=main')
 
@@ -122,10 +122,19 @@ def work_promt2(message):
 
 @bot.message_handler(content_types=['text'])
 def any_message(message):
-    print('это сообщение', message)
-    #text = message.text.lower()
     text = message.text
     userID = message.chat.id
+    dateNow = date_now()
+
+    rows = sql.select_query('prognoz_text',f"date = CAST('{dateNow}' as datetime) and coin = '{text.title()}'")
+    if rows != []:
+        text = rows[0]['text_prognoz'].decode('utf-8')
+        bot.send_message(message.chat.id, text)
+        return 0 
+    
+    print('это сообщение', message)
+    #text = message.text.lower()
+    
     try:
         payload = sql.get_payload(userID)
     except:
@@ -140,22 +149,26 @@ def any_message(message):
         return 0
     
     #promt = sql.select_query('promt', f'promt="promt1"')[0]['promt']
-    promtUrl = sql.select_query('promt', f'promt="promt1"')[
-        0]['url'].decode('utf-8')
-    PROMT_URL = promtUrl 
+    # promtUrl = sql.select_query('promt', f'promt="promt1"')[
+    #     0]['url'].decode('utf-8')
+    # PROMT_URL = promtUrl 
 
     bot.send_message(message.chat.id,'Состaвляю аналитику')
     #promt = gpt.load_prompt(promptUrl)
     promt = gpt.load_prompt(PROMT_URL)
     #promt = 
     #print(f'{promptUrl=}')
-    analitBTC = get_BTC_analit_for(text)
+    coin = coins[text.title()]
+    analitBTC = get_BTC_analit_for('Аналитика BTC на 7 дней',coin)
     #print(f'{analitBTC}')
-    current, future = get_dates(int(text.split(' ')[3]))
+    current, future = get_dates(7)
     print("Текущая дата:", current)
-    print(f"Дата через {text} дней:", future)
+    print(f"Дата через 7 дней:", future)
     promt = promt.replace('[analitict]', analitBTC)
-    promt = promt.replace('[nextDate]', text.split(' ')[3])
+    #promt = promt.replace('[nextDate]', text.split(' ')[3])
+
+    promt = promt.replace('[nextDate]', '7')
+    promt = promt.replace('[coin]', text)
     promt = promt.replace('[nowDate]', future)
     print(f'{PROMT_URL}')
     #print('#########################################', promt)
@@ -164,13 +177,21 @@ def any_message(message):
                 {'role': 'user', 'content': ' '}]
         answer, allToken, allTokenPrice= gpt.answer(' ',mess,)
         
-        row = {'all_price': float(allTokenPrice), 'all_token': int(allToken), 'all_messages': 1}
-        sql.plus_query_user('user', row, f"id={userID}")
+        #TODO подключить статистику
+        #row = {'all_price': float(allTokenPrice), 'all_token': int(allToken), 'all_messages': 1}
+        #sql.plus_query_user('user', row, f"id={userID}")
     
     except Exception as e:
         bot.send_message(message.chat.id, f'{e}')
         return 0
-    
+    row = {
+            'time_epoh':time_epoch(),
+            'date':dateNow,
+            'text_prognoz': answer,
+            'coin':text,
+        }
+        
+    sql.insert_query('prognoz_text', row)
 
     bot.send_message(message.chat.id, answer)
     #add_message_to_history(userID, 'assistant', answer)

@@ -23,6 +23,12 @@ def get_dates(day):
 
     return current_date, future_date
 
+def date_now():
+    #patern = '%Y-%m-%dT%H:%M:%S'
+    patern = '%Y-%m-%dT%H:00:00'
+    #patern = '%Y-%m-%dT%H'
+    current_date = datetime.now().strftime(patern)
+    return current_date+'Z'
 #YDB
 def get_model_url(modelName: str):
     modelUrl = sql.select_query('model', f'model = "{modelName}"')[0]['url']
@@ -56,3 +62,14 @@ def sum_dict_values(dict1, dict2):
             result[key] = dict2[key]
 
     return result
+
+coins = {'Bitcoin':'BTCUSDT', 
+    'Ethereum':'ETHUSDT',
+    'Bnb':'BNBUSDT',
+    'Ripple':'XRPUSDT',
+    'Cardano':'ADAUSDT',
+    'Dogecoin':'DOGEUSDT',
+    'Solana':'SOLUSDT',
+    'Tron':'TRXUSDT',
+    'Polkadot':'DOTUSDT',
+    'Polygon':'MATICUSDT'}

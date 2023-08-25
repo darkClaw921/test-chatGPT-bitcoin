@@ -18,6 +18,10 @@ driver.wait(fail_fast=True, timeout=5)
 # Create the session pool instance to manage YDB sessions.
 pool = ydb.SessionPool(driver)
 
+intList = ['all_token', 'all_messages', 'time_epoh', 'token','orderID']
+floatList = ['token_price','amount','price_open', 'price_insert','price_close','need_price_close']
+dateTimeList = ['date_time','date_close','need_data_close','date_open', 'date_open', 'date']
+
 def truncate_string(string, max_length):
     if len(string.encode('utf-8')) > max_length:
         return string[:max_length]
@@ -144,6 +148,7 @@ class Ydb:
         return pool.retry_operation_sync(a)
 
 
+   
     def insert_query(self, tableNameUserID: str, rows: dict):
         field_names = rows.keys()
         fields_format = ", ".join(field_names)
@@ -156,10 +161,20 @@ class Ydb:
                 value1 = value1.replace('"',"'")    
             except:
                 1 + 0
-
+            
+            #TODO переделать под разные форматы
             value1 = truncate_string(str(value1), 2000)            
             if key == 'id':
                 value += f'{value1},'
+
+            elif key in intList:
+                value += f'{int(value1)},'
+            
+            elif key in floatList:
+                value += f'{float(value1)},'
+            
+            elif key in dateTimeList:
+                value += f'CAST("{value1}" AS datetime ),'
             else:
                 value += f'"{value1}",'
             
