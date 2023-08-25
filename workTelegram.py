@@ -45,9 +45,9 @@ def say_welcome(message):
     username = message.from_user.username
 
     row = {'id': 'Uint64', 'MODEL_DIALOG': 'String', 'TEXT': 'String'}
-    sql.create_table(str(message.chat.id), row)
+    #sql.create_table(str(message.chat.id), row)
     row = {'id': message.chat.id, 'model': '', 'promt': '','nicname':username}
-    sql.replace_query('user', row)
+    #sql.replace_query('user', row)
 
     bot.send_message(message.chat.id, """Привет. Я Chat GPT-4, ИИ-аналитик по BTC""", reply_markup=create_menu_keyboard())
 #expert_promt = gpt.load_prompt('https://docs.google.com/document/d/181Q-jJpSpV0PGnGnx45zQTHlHSQxXvkpuqlKmVlHDvU/')
