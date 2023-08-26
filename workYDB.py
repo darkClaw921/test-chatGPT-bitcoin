@@ -255,6 +255,31 @@ class Ydb:
         print('rez',rez)
         return rez
 
+    def get_last_prognoz(self,coin):
+        # 'where id > 20 '
+        query = f"""SELECT * FROM prognoz_text
+WHERE coin = '{coin}'
+ORDER BY time_epoh desc
+limit 1"""
+        print(query)
+
+        def a(session):
+            return session.transaction().execute(
+                query,
+                commit_tx=True,
+            )
+        b = pool.retry_operation_sync(a)
+        
+        # string = b_string.decode('utf-8')
+        # IndexError: list index out of range если нет данныйх
+        #print('b',b)
+        try:
+            rez = b[0].rows[0]['text_prognoz'].decode('utf-8')
+        except: 
+            rez = []
+
+        print('rez',rez)
+        return rez
 
 def handler(event, context):
     return {

@@ -123,79 +123,82 @@ def work_promt2(message):
 @bot.message_handler(content_types=['text'])
 def any_message(message):
     text = message.text
-    userID = message.chat.id
-    dateNow = date_now()
+    prognoz = sql.get_last_prognoz(text)
+    bot.send_message(message.chat.id, prognoz) 
+    # text = message.text
+    # userID = message.chat.id
+    # dateNow = date_now()
 
-    rows = sql.select_query('prognoz_text',f"date = CAST('{dateNow}' as datetime) and coin = '{text.title()}'")
-    if rows != []:
-        text = rows[0]['text_prognoz'].decode('utf-8')
-        bot.send_message(message.chat.id, text)
-        return 0 
+    # rows = sql.select_query('prognoz_text',f"date = CAST('{dateNow}' as datetime) and coin = '{text.title()}'")
+    # if rows != []:
+    #     text = rows[0]['text_prognoz'].decode('utf-8')
+    #     bot.send_message(message.chat.id, text)
+    #     return 0 
     
-    print('это сообщение', message)
-    #text = message.text.lower()
+    # print('это сообщение', message)
+    # #text = message.text.lower()
     
-    try:
-        payload = sql.get_payload(userID)
-    except:
-        payload = 'a'
+    # try:
+    #     payload = sql.get_payload(userID)
+    # except:
+    #     payload = 'a'
     
-    if payload == 'addpromt':
-        text = text.split(' ')
-        rows = {'promt': text[1], 'url': text[0] }
-        #sql.insert_query('model',rows)
-        sql.replace_query('promt',rows)
-        sql.set_payload(message.chat.id, '')
-        return 0
+    # if payload == 'addpromt':
+    #     text = text.split(' ')
+    #     rows = {'promt': text[1], 'url': text[0] }
+    #     #sql.insert_query('model',rows)
+    #     sql.replace_query('promt',rows)
+    #     sql.set_payload(message.chat.id, '')
+    #     return 0
     
-    #promt = sql.select_query('promt', f'promt="promt1"')[0]['promt']
-    # promtUrl = sql.select_query('promt', f'promt="promt1"')[
-    #     0]['url'].decode('utf-8')
-    # PROMT_URL = promtUrl 
+    # #promt = sql.select_query('promt', f'promt="promt1"')[0]['promt']
+    # # promtUrl = sql.select_query('promt', f'promt="promt1"')[
+    # #     0]['url'].decode('utf-8')
+    # # PROMT_URL = promtUrl 
 
-    bot.send_message(message.chat.id,'Состaвляю аналитику')
-    #promt = gpt.load_prompt(promptUrl)
-    promt = gpt.load_prompt(PROMT_URL)
-    #promt = 
-    #print(f'{promptUrl=}')
-    coin = coins[text.title()]
-    analitBTC = get_BTC_analit_for('Аналитика BTC на 7 дней',coin)
-    #print(f'{analitBTC}')
-    current, future = get_dates(7)
-    print("Текущая дата:", current)
-    print(f"Дата через 7 дней:", future)
-    promt = promt.replace('[analitict]', analitBTC)
-    #promt = promt.replace('[nextDate]', text.split(' ')[3])
+    # bot.send_message(message.chat.id,'Состaвляю аналитику')
+    # #promt = gpt.load_prompt(promptUrl)
+    # promt = gpt.load_prompt(PROMT_URL)
+    # #promt = 
+    # #print(f'{promptUrl=}')
+    # coin = coins[text.title()]
+    # analitBTC = get_BTC_analit_for('Аналитика BTC на 7 дней',coin)
+    # #print(f'{analitBTC}')
+    # current, future = get_dates(7)
+    # print("Текущая дата:", current)
+    # print(f"Дата через 7 дней:", future)
+    # promt = promt.replace('[analitict]', analitBTC)
+    # #promt = promt.replace('[nextDate]', text.split(' ')[3])
 
-    promt = promt.replace('[nextDate]', '7')
-    promt = promt.replace('[coin]', text)
-    promt = promt.replace('[nowDate]', future)
-    print(f'{PROMT_URL}')
-    #print('#########################################', promt)
-    try:
-        mess = [{'role': 'system', 'content': promt,},
-                {'role': 'user', 'content': ' '}]
-        answer, allToken, allTokenPrice= gpt.answer(' ',mess,)
+    # promt = promt.replace('[nextDate]', '7')
+    # promt = promt.replace('[coin]', text)
+    # promt = promt.replace('[nowDate]', future)
+    # print(f'{PROMT_URL}')
+    # #print('#########################################', promt)
+    # try:
+    #     mess = [{'role': 'system', 'content': promt,},
+    #             {'role': 'user', 'content': ' '}]
+    #     answer, allToken, allTokenPrice= gpt.answer(' ',mess,)
         
-        #TODO подключить статистику
-        #row = {'all_price': float(allTokenPrice), 'all_token': int(allToken), 'all_messages': 1}
-        #sql.plus_query_user('user', row, f"id={userID}")
+    #     #TODO подключить статистику
+    #     #row = {'all_price': float(allTokenPrice), 'all_token': int(allToken), 'all_messages': 1}
+    #     #sql.plus_query_user('user', row, f"id={userID}")
     
-    except Exception as e:
-        bot.send_message(message.chat.id, f'{e}')
-        return 0
-    row = {
-            'time_epoh':time_epoch(),
-            'date':dateNow,
-            'text_prognoz': answer,
-            'coin':text.title(),
-        }
+    # except Exception as e:
+    #     bot.send_message(message.chat.id, f'{e}')
+    #     return 0
+    # row = {
+    #         'time_epoh':time_epoch(),
+    #         'date':dateNow,
+    #         'text_prognoz': answer,
+    #         'coin':text.title(),
+    #     }
         
-    sql.insert_query('prognoz_text', row)
+    # sql.insert_query('prognoz_text', row)
 
-    bot.send_message(message.chat.id, answer)
-    #add_message_to_history(userID, 'assistant', answer)
-    return 0
+    # bot.send_message(message.chat.id, answer)
+    # #add_message_to_history(userID, 'assistant', answer)
+    # return 0
     #context = sql.get_context(userID, payload)
     # if context is None or context == '' or context == []:
     #    context = text
@@ -203,35 +206,35 @@ def any_message(message):
     #print('context2', context + f'клиент: {text}')
     #model= gpt.load_prompt('https://docs.google.com/document/d/1f4GMt2utNHsrSjqwE9tZ7R632_ceSdgK6k-_QwyioZA/edit?usp=sharing')
     # try:
-    promt = sql.select_query('user', f'id={message.chat.id}')[
-        0]['promt'].decode('utf-8')
-    promtUrl = sql.select_query('promt', f'promt="{promt}"')[
-        0]['url'].decode('utf-8')
-    #    modelUrl = sql.select_query('user', f'id={message.chat.id}')['model']
-    #    promt= gpt.load_prompt(get_model_url(promtUrl))
-    #    answer = gpt.answer_index(promt, text, modelUrl)
-    # except:
-    #bot.send_message(message.chat.id, 'У вас не выбран пром, работа по стандартному')
-    #promt= 'https://docs.google.com/document/d/1KbXMyyIbf4BKFkZeQfzKyzU8blCKoXmFl9du2UD0I7c/edit?usp=sharing'
-    promt = gpt.load_prompt(promtUrl)
-    try:
-        answer = gpt.answer(promt, text, temp=1)
-    except Exception as e:
-        bot.send_message(message.chat.id, f'{e}')
-        return 0
-    #model= gpt.load_prompt(get_model_url(payload))
-    #answer = gpt.answer(model, text, temp = 0.1)
-    #answer = gpt.answer_index(promt, text, model_index,)
-    print('answer', answer)
-    bot.send_message(message.chat.id, answer)
-    # if payload == 'model3':
-    rows = {'id': time_epoch(), 'MODEL_DIALOG': payload,
-            'TEXT': f'клиент: {text}'}
-    sql.insert_query(userID,  rows)
+    # promt = sql.select_query('user', f'id={message.chat.id}')[
+    #     0]['promt'].decode('utf-8')
+    # promtUrl = sql.select_query('promt', f'promt="{promt}"')[
+    #     0]['url'].decode('utf-8')
+    # #    modelUrl = sql.select_query('user', f'id={message.chat.id}')['model']
+    # #    promt= gpt.load_prompt(get_model_url(promtUrl))
+    # #    answer = gpt.answer_index(promt, text, modelUrl)
+    # # except:
+    # #bot.send_message(message.chat.id, 'У вас не выбран пром, работа по стандартному')
+    # #promt= 'https://docs.google.com/document/d/1KbXMyyIbf4BKFkZeQfzKyzU8blCKoXmFl9du2UD0I7c/edit?usp=sharing'
+    # promt = gpt.load_prompt(promtUrl)
+    # try:
+    #     answer = gpt.answer(promt, text, temp=1)
+    # except Exception as e:
+    #     bot.send_message(message.chat.id, f'{e}')
+    #     return 0
+    # #model= gpt.load_prompt(get_model_url(payload))
+    # #answer = gpt.answer(model, text, temp = 0.1)
+    # #answer = gpt.answer_index(promt, text, model_index,)
+    # print('answer', answer)
+    # bot.send_message(message.chat.id, answer)
+    # # if payload == 'model3':
+    # rows = {'id': time_epoch(), 'MODEL_DIALOG': payload,
+    #         'TEXT': f'клиент: {text}'}
+    # sql.insert_query(userID,  rows)
 
-    rows = {'id': time_epoch()+1, 'MODEL_DIALOG': payload,
-            'TEXT': f'менеджер: {answer}'}
-    sql.insert_query(userID,  rows)
+    # rows = {'id': time_epoch()+1, 'MODEL_DIALOG': payload,
+    #         'TEXT': f'менеджер: {answer}'}
+    # sql.insert_query(userID,  rows)
 
 
 bot.infinity_polling()

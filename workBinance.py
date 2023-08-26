@@ -58,7 +58,7 @@ def get_BTC_analit_for(dayStart:str ,coin)-> str:
     Returns:
         str: _description_
     """
-    setting={'Аналитика BTC на 7 дней':[Client.KLINE_INTERVAL_1HOUR, '10 days ago UTC'],
+    setting={'Аналитика BTC на 7 дней':[Client.KLINE_INTERVAL_1HOUR, '7 days ago UTC'],
             'Аналитика BTC на 15 дней':[Client.KLINE_INTERVAL_1DAY , '3 month ago UTC'],
             'Аналитика BTC на 30 дней':[Client.KLINE_INTERVAL_1WEEK, '2 year ago UTC'],}
 
