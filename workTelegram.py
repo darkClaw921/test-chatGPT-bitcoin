@@ -123,7 +123,7 @@ def work_promt2(message):
 @bot.message_handler(content_types=['text'])
 def any_message(message):
     text = message.text
-    prognoz = sql.get_last_prognoz(text)
+    prognoz = sql.get_last_prognoz(text.title())
     bot.send_message(message.chat.id, prognoz) 
     # text = message.text
     # userID = message.chat.id

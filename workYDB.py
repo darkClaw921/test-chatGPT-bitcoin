@@ -272,7 +272,7 @@ limit 1"""
         
         # string = b_string.decode('utf-8')
         # IndexError: list index out of range если нет данныйх
-        #print('b',b)
+        print('b',b[0].rows[0])
         try:
             rez = b[0].rows[0]['text_prognoz'].decode('utf-8')
         except: 
