@@ -58,10 +58,14 @@ def say_welcome(message):
 def restart_modal_index(message):
     global model_index
     #model_index = gpt.load_search_indexes(model_index)
-    url = f'https://analitics.aibetradedev.ru/stocks/1/coins/Bitcoin/forecastText/1'
+    coin = message.text.split(' ')[1].title()
+    bot.send_message(message.chat.id,f'create {coin}')
+
+    url = f'https://analitics.aibetradedev.ru/stocks/1/coins/{coin}/forecastText/1'
     a = requests.post(url)
+    print(a)
     bot.send_message(message.chat.id,'Done')
-    
+
 @bot.message_handler(commands=['context'])
 def send_button(message):
     try:
