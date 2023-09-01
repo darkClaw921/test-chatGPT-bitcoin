@@ -49,7 +49,7 @@ def say_welcome(message):
     row = {'id': message.chat.id, 'model': '', 'promt': '','nicname':username}
     #sql.replace_query('user', row)
 
-    bot.send_message(message.chat.id, """Привет. Я Chat GPT-4, ИИ-аналитик по BTC""", reply_markup=create_menu_keyboard())
+    bot.send_message(message.chat.id, """Привет. Я AiBeTrade - аналитик""", reply_markup=create_menu_keyboard())
 #expert_promt = gpt.load_prompt('https://docs.google.com/document/d/181Q-jJpSpV0PGnGnx45zQTHlHSQxXvkpuqlKmVlHDvU/')
 
 
