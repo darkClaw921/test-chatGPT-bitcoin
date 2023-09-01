@@ -13,6 +13,7 @@ import redis
 import json
 from workBinance import get_BTC_analit_for
 from helper import *
+import requests
 load_dotenv()
 
 gpt = GPT()
@@ -56,9 +57,11 @@ def say_welcome(message):
 @bot.message_handler(commands=['restart'])
 def restart_modal_index(message):
     global model_index
-    model_index = gpt.load_search_indexes(model_index)
-
-
+    #model_index = gpt.load_search_indexes(model_index)
+    url = f'https://analitics.aibetradedev.ru/stocks/1/coins/Bitcoin/forecastText/1'
+    a = requests.post(url)
+    bot.send_message(message.chat.id,'Done')
+    
 @bot.message_handler(commands=['context'])
 def send_button(message):
     try:
