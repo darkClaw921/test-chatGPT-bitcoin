@@ -124,7 +124,12 @@ def work_promt2(message):
 def any_message(message):
     text = message.text
     prognoz = sql.get_last_prognoz(text.title())
-    bot.send_message(message.chat.id, prognoz) 
+    try:
+        bot.send_message(message.chat.id, prognoz) 
+    except:
+        first_half, second_half = split_string(prognoz)
+        bot.send_message(message.chat.id, first_half) 
+        bot.send_message(message.chat.id, second_half)  
     # text = message.text
     # userID = message.chat.id
     # dateNow = date_now()

@@ -48,7 +48,21 @@ def clear_history(userID:str):
     r.delete(userID)
 
 # any
+def split_string(string):
+    # Размер строки
+    length = len(string)
+    
+    # Индекс середины строки
+    middle_index = length // 2
+    
+    # Разбиение строки на две части
+    first_half = string[:middle_index]
+    second_half = string[middle_index:]
+    
+    return first_half, second_half
+
 def sum_dict_values(dict1, dict2):
+
     result = {}
 
     for key in dict1:
